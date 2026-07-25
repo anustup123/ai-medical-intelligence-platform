@@ -1,0 +1,25 @@
+# Environment
+.env
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Data (too large / licensed for GitHub — see data/README.md for download instructions)
+data/chest_xray/
+
+# Trained model (large binary — use Git LFS or a release asset instead, see README)
+models/*.pt
+!models/.gitkeep
+
+# Database
+predictions.db
+
+# Generated reports/outputs
+reports/gradcam_outputs/
+reports/*.png
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

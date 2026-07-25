@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Medical Intelligence Platform</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">⚕</span>
+      <div>
+        <h1>AI Medical Intelligence Platform</h1>
+        <p>Chest X-Ray Pneumonia Screening · Deep Learning + Grad-CAM + LLM Reports</p>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="analyze">Analyze</button>
+      <button class="tab-btn" data-tab="history">History</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="analyze-tab" class="tab-panel active">
+      <div class="upload-card">
+        <h2>Upload Chest X-Ray</h2>
+        <p class="hint">JPEG or PNG, up to 10MB. This tool is for educational/demo purposes only.</p>
+
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept="image/png, image/jpeg" hidden>
+          <span id="dropzoneText">Click to select an image, or drag &amp; drop here</span>
+          <img id="previewImg" class="preview" hidden>
+        </label>
+
+        <button id="analyzeBtn" class="primary-btn" disabled>Analyze X-Ray</button>
+        <p id="statusMsg" class="status-msg"></p>
+      </div>
+
+      <div id="resultCard" class="result-card" hidden>
+        <div class="result-grid">
+          <div class="result-images">
+            <div class="image-block">
+              <h3>Original</h3>
+              <img id="originalPreview" alt="Original X-ray">
+            </div>
+            <div class="image-block">
+              <h3>Grad-CAM Explanation</h3>
+              <img id="gradcamPreview" alt="Grad-CAM heatmap">
+            </div>
+          </div>
+
+          <div class="result-details">
+            <div class="prediction-badge" id="predictionBadge">—</div>
+            <div class="confidence-bar-wrap">
+              <div class="confidence-label">
+                <span>Confidence</span>
+                <span id="confidenceValue">0%</span>
+              </div>
+              <div class="confidence-bar"><div id="confidenceFill" class="confidence-fill"></div></div>
+            </div>
+            <div class="prob-breakdown" id="probBreakdown"></div>
+            <p class="attention-note">Model attention concentrated in the
+              <strong id="attentionRegion">—</strong>.</p>
+          </div>
+        </div>
+
+        <div class="report-block">
+          <h3>AI-Generated Draft Report</h3>
+          <pre id="llmReport" class="llm-report"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="history-tab" class="tab-panel">
+      <div class="history-header">
+        <h2>Prediction History</h2>
+        <button id="refreshHistoryBtn" class="secondary-btn">Refresh</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p><strong>Disclaimer:</strong> This application is an educational / portfolio project.
+       It is not a certified medical device and must never be used for real clinical diagnosis.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
