@@ -41,11 +41,17 @@ NORMALIZE_MEAN = [0.485, 0.456, 0.406]
 NORMALIZE_STD = [0.229, 0.224, 0.225]
 
 # ---------------------------------------------------------------------------
-# LLM (Anthropic Claude) settings — used for AI-generated report narration
+# LLM settings — used for AI-generated report narration.
+# The app tries providers in this order: Anthropic (if key set) -> Gemini
+# (if key set, free tier available) -> deterministic offline template.
 # ---------------------------------------------------------------------------
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "claude-sonnet-4-6")
 LLM_MAX_TOKENS = 700
+
+# Free-tier alternative: https://aistudio.google.com/apikey
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 # ---------------------------------------------------------------------------
 # Device

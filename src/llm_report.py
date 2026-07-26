@@ -10,12 +10,20 @@ performing any diagnosis of its own. This separation of concerns (DL model
 decides "what", LLM decides "how to phrase it") is a deliberate and
 important safety design choice for medical AI systems.
 
-Requires an Anthropic API key set as the ANTHROPIC_API_KEY environment
-variable. Get one at https://console.anthropic.com/
+Provider order (first available wins):
+  1. Anthropic Claude  — set ANTHROPIC_API_KEY (paid, console.anthropic.com)
+  2. Google Gemini      — set GEMINI_API_KEY (FREE tier, aistudio.google.com/apikey)
+  3. Offline template   — always available, no key needed, no cost
+
+This means the app works fully out of the box with zero API cost, and
+upgrades automatically to a real LLM the moment you add either key.
 """
 import os
 
-from src.config import ANTHROPIC_API_KEY, LLM_MODEL, LLM_MAX_TOKENS
+from src.config import (
+    ANTHROPIC_API_KEY, LLM_MODEL, LLM_MAX_TOKENS,
+    GEMINI_API_KEY, GEMINI_MODEL,
+)
 
 SYSTEM_PROMPT = """You are an AI assistant that helps draft preliminary radiology-style \
 summaries for an educational AI project. You will be given the structured output of a \
@@ -44,27 +52,47 @@ Please draft the report now."""
 
 def generate_report(result: dict) -> str:
     """
-    Calls the Anthropic Messages API to turn the structured prediction result
-    into a natural-language draft report. Falls back to a deterministic
-    templated report if no API key is configured, so the rest of the
-    pipeline (API, DB, frontend) can still be demoed/tested without an LLM key.
+    Turns the structured prediction result into a natural-language draft
+    report. Tries Anthropic Claude first, then falls back to Google Gemini
+    (free tier), then finally to a deterministic offline template if neither
+    API key is configured or both calls fail — so the rest of the pipeline
+    (API, DB, frontend) is always demoable, with zero mandatory cost.
     """
-    if not ANTHROPIC_API_KEY:
-        return _fallback_template_report(result)
+    if ANTHROPIC_API_KEY:
+        try:
+            return _generate_with_anthropic(result)
+        except Exception as e:
+            print(f"[llm_report] Anthropic call failed, trying next provider: {e}")
 
-    try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        message = client.messages.create(
-            model=LLM_MODEL,
-            max_tokens=LLM_MAX_TOKENS,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": _build_user_prompt(result)}],
-        )
-        return "".join(block.text for block in message.content if block.type == "text")
-    except Exception as e:  # network / auth / rate-limit errors
-        fallback = _fallback_template_report(result)
-        return f"{fallback}\n\n[Note: LLM call failed ({e}); showing templated report instead.]"
+    if GEMINI_API_KEY:
+        try:
+            return _generate_with_gemini(result)
+        except Exception as e:
+            print(f"[llm_report] Gemini call failed, using offline template: {e}")
+
+    return _fallback_template_report(result)
+
+
+def _generate_with_anthropic(result: dict) -> str:
+    import anthropic
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    message = client.messages.create(
+        model=LLM_MODEL,
+        max_tokens=LLM_MAX_TOKENS,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": _build_user_prompt(result)}],
+    )
+    return "".join(block.text for block in message.content if block.type == "text")
+
+
+def _generate_with_gemini(result: dict) -> str:
+    from google import genai
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=f"{SYSTEM_PROMPT}\n\n{_build_user_prompt(result)}",
+    )
+    return response.text
 
 
 def _fallback_template_report(result: dict) -> str:

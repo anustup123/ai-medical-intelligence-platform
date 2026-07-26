@@ -18,6 +18,7 @@ SQLAlchemy
 
 # --- LLM Integration ---
 anthropic
+google-genai
 
 # --- Testing ---
 pytest
