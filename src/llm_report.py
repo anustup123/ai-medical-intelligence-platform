@@ -19,11 +19,30 @@ This means the app works fully out of the box with zero API cost, and
 upgrades automatically to a real LLM the moment you add either key.
 """
 import os
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 from src.config import (
     ANTHROPIC_API_KEY, LLM_MODEL, LLM_MAX_TOKENS,
     GEMINI_API_KEY, GEMINI_MODEL,
 )
+
+# Hard ceiling on how long we'll wait for an external LLM call before giving up
+# and falling back. This matters a lot on hosting platforms like Render, where
+# the platform's own reverse proxy has its own request timeout — if our code
+# waits indefinitely on a hung network call, the proxy eventually kills the
+# whole connection and returns a 502 to the user, even though our process is
+# still alive and stuck. Failing fast here means we always control the outcome
+# ourselves instead of letting the platform time us out first.
+LLM_TIMEOUT_SECONDS = 20
+_executor = ThreadPoolExecutor(max_workers=4)
+
+
+def _call_with_timeout(fn, *args, timeout=LLM_TIMEOUT_SECONDS, **kwargs):
+    future = _executor.submit(fn, *args, **kwargs)
+    try:
+        return future.result(timeout=timeout)
+    except FutureTimeoutError:
+        raise TimeoutError(f"LLM call exceeded {timeout}s timeout")
 
 SYSTEM_PROMPT = """You are an AI assistant that helps draft preliminary radiology-style \
 summaries for an educational AI project. You will be given the structured output of a \
@@ -60,13 +79,13 @@ def generate_report(result: dict) -> str:
     """
     if ANTHROPIC_API_KEY:
         try:
-            return _generate_with_anthropic(result)
+            return _call_with_timeout(_generate_with_anthropic, result)
         except Exception as e:
             print(f"[llm_report] Anthropic call failed, trying next provider: {e}")
 
     if GEMINI_API_KEY:
         try:
-            return _generate_with_gemini(result)
+            return _call_with_timeout(_generate_with_gemini, result)
         except Exception as e:
             print(f"[llm_report] Gemini call failed, using offline template: {e}")
 

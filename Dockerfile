@@ -13,6 +13,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY requirements.txt .
+# Install CPU-only PyTorch/torchvision first (the default PyPI package pulls in
+# large CUDA libraries that are completely unused on a CPU-only host like
+# Render's free tier — this cuts image size and memory footprint substantially).
+RUN pip install --no-cache-dir torch==2.3.1 torchvision==0.18.1 \
+    --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
