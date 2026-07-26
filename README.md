@@ -18,7 +18,7 @@ stores prediction history in a **database**, and ships with a simple **web UI**.
                        ▼                          ▼                           ▼
               ┌─────────────────┐      ┌─────────────────────┐   ┌──────────────────────┐
               │ Deep Learning    │      │ Explainable AI       │   │ LLM Report Generator  │
-              │ DenseNet121 CNN  │─────▶│ Grad-CAM              │──▶│ (Anthropic Claude API)│
+              │ DenseNet121 CNN  │─────▶│ Grad-CAM              │──▶│ (Googl's Gemini API)│
               │ (src/model.py)   │      │ (src/gradcam.py)      │   │ (src/llm_report.py)   │
               └─────────────────┘      └─────────────────────┘   └──────────────────────┘
                                                   │
@@ -31,7 +31,7 @@ stores prediction history in a **database**, and ships with a simple **web UI**.
 
 
 
-## 3. Model & Algorithms
+## 2. Model & Algorithms
 
 | Component | Choice | Why |
 |---|---|---|
@@ -41,7 +41,7 @@ stores prediction history in a **database**, and ships with a simple **web UI**.
 | Augmentation | Random flip, rotation, color jitter | Improves generalization on ~5k images |
 | Optimizer | Adam + ReduceLROnPlateau scheduler | Standard, robust default |
 | Explainability | Custom Grad-CAM (Selvaraju et al., 2017) implemented from scratch | Full transparency for your write-up; no black-box library |
-| LLM | Anthropic Claude API (`claude-sonnet-4-6`) | Converts structured predictions into a readable draft report |
+| LLM | Googl's Gemini API (`gemini-2.0-flash`) | Converts structured predictions into a readable draft report |
 | API | FastAPI | Async, auto-generated OpenAPI docs at `/docs` |
 | Database | SQLAlchemy ORM + SQLite (swappable to PostgreSQL via `DATABASE_URL`) | Zero-config for the assignment, production-ready path included |
 | Deployment | Docker + docker-compose | Portable, reproducible |
